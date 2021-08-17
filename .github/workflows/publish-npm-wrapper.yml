@@ -1,4 +1,4 @@
-name: Doc Publish
+name: Wrapper Npm Publish
 on: [workflow_dispatch]
 jobs:
   pre-check:
@@ -74,7 +74,7 @@ jobs:
         run: |
           npm run test:ci uml
 
-  doc:
+  publish:
     runs-on: ubuntu-latest
     needs: [pre-check, test, plugin-test]
     steps:
@@ -88,46 +88,25 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '15.x'
+          registry-url: https://registry.npmjs.org/
       - name: Install
         run: |
-          npm install
-      - name: Use Node.js 10.x
-        uses: actions/setup-node@v1
-        with:
-          node-version: '10.x'
-      - name: Install @toast-ui/doc
-        run: |
-          npm i -g @toast-ui/doc
+          npm ci
       - name: Build
         run: |
           npm run build toastmark
           npm run build editor
-      - name: Run doc
+          npm run build react
+          npm run build vue
+      - name: Npm Publish(react)
+        working-directory: ./apps/react-editor
         run: |
-          npm run doc
-          mv apps/editor/_${{ steps.check.outputs.committed-version }} ${{ steps.check.outputs.committed-version }}
-          mv apps/editor/_latest latest
-          rm -rf apps/editor/tmpdoc
-          git checkout -- apps/editor/types/index.d.ts package-lock.json
-          git add ${{ steps.check.outputs.committed-version }}/dist -f
-          git add latest/dist -f
-          git stash --include-untracked
-      - name: Checkout gh-pages
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-      - name: Commit files
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
+      - name: Npm Publish(vue)
+        working-directory: ./apps/vue-editor
         run: |
-          git config --local user.email 'js87zz.lee@nhn.com'
-          git config --local user.name 'js87zz'
-          rm -rf ${{ steps.check.outputs.committed-version }}
-          rm -rf latest
-          git add .
-          git stash pop
-          git add .
-          git commit -m '${{ steps.check.outputs.committed-version }}'
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gh-pages
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}

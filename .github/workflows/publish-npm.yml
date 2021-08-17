@@ -113,8 +113,6 @@ jobs:
         run: |
           npm run build toastmark
           npm run build editor
-          npm run build react
-          npm run build vue
       - name: Create Tag
         run: |
           git config --local user.email 'js87zz.lee@nhn.com'
@@ -127,18 +125,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Npm Publish(editor)
         working-directory: ./apps/editor
-        run: |
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
-      - name: Npm Publish(react)
-        working-directory: ./apps/react-editor
-        run: |
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
-      - name: Npm Publish(vue)
-        working-directory: ./apps/vue-editor
         run: |
           npm publish
         env:
