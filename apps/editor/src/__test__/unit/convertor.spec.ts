@@ -316,6 +316,29 @@ describe('Convertor', () => {
       assertConverting(markdown, expected);
     });
 
+    it('block nodes in list', () => {
+      const markdown = source`
+        1. foo
+
+            \`\`\`
+            bar
+            \`\`\`
+        
+            > bam
+      `;
+      const expected = source`
+        1. foo
+
+            \`\`\`
+            bar
+            \`\`\`
+        
+            > bam
+      `;
+
+      assertConverting(markdown, expected);
+    });
+
     it('soft break', () => {
       const markdown = source`
         foo
@@ -497,6 +520,25 @@ describe('Convertor', () => {
       `;
 
       assertConverting(markdown, `${markdown}\n`);
+    });
+
+    it('table with unmatched html list', () => {
+      const markdown = source`
+        | thead |
+        | ----- |
+        | <ul><li>bullet</li><ul> |
+        | <ol><li>ordered</li><ol> |
+        | <ul><li>nested<ul><li>nested</li><ul><li><ul> |
+      `;
+      const expected = source`
+        | thead |
+        | ----- |
+        | <ul><li>bullet</li></ul> |
+        | <ol><li>ordered</li></ol> |
+        | <ul><li>nested<ul><li>nested</li></ul></li></ul> |
+      `;
+
+      assertConverting(markdown, `${expected}\n`);
     });
   });
 
