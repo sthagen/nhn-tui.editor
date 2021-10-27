@@ -85,7 +85,7 @@ import { getHTMLRenderConvertors } from './markdown/htmlRenderConvertors';
  *     @param {autofocus} [options.autofocus=true] - automatically focus the editor on creation.
  */
 class ToastUIEditorCore {
-  private initialHtml: string;
+  private initialHTML: string;
 
   private toastMark: ToastMark;
 
@@ -118,7 +118,7 @@ class ToastUIEditorCore {
   protected pluginInfo: PluginInfoResult;
 
   constructor(options: EditorOptions) {
-    this.initialHtml = options.el.innerHTML;
+    this.initialHTML = options.el.innerHTML;
     options.el.innerHTML = '';
 
     this.options = extend(
@@ -169,6 +169,9 @@ class ToastUIEditorCore {
     this.mode = initialEditType || 'markdown';
     this.mdPreviewStyle = this.options.previewStyle;
 
+    this.i18n = i18n;
+    this.i18n.setCode(this.options.language);
+
     this.eventEmitter = new EventEmitter();
 
     setWidgetRules(widgetRules);
@@ -204,9 +207,6 @@ class ToastUIEditorCore {
       rendererOptions.sanitizer,
       wwToDOMAdaptor
     );
-
-    this.i18n = i18n;
-    this.i18n.setCode(this.options.language);
 
     this.toastMark = new ToastMark('', {
       disallowedHtmlBlockTags: ['br', 'img'],
@@ -256,7 +256,7 @@ class ToastUIEditorCore {
     }
 
     if (!this.options.initialValue) {
-      this.setHTML(this.initialHtml, false);
+      this.setHTML(this.initialHTML, false);
     }
 
     this.commandManager = new CommandManager(
@@ -481,18 +481,15 @@ class ToastUIEditorCore {
    */
   getHTML() {
     this.eventEmitter.holdEventInvoke(() => {
-      if (this.isWysiwygMode()) {
-        this.mdEditor.setMarkdown(this.convertor.toMarkdownText(this.wwEditor.getModel()));
+      if (this.isMarkdownMode()) {
+        const mdNode = this.toastMark.getRootNode();
+        const wwNode = this.convertor.toWysiwygModel(mdNode);
+
+        this.wwEditor.setModel(wwNode!);
       }
     });
 
-    const mdNode = this.toastMark.getRootNode();
-    const mdRenderer = this.preview.getRenderer();
-
-    return mdRenderer
-      .render(mdNode)
-      .replace(/\sdata-nodeid="\d{1,}"/g, '')
-      .trim();
+    return this.wwEditor.view.dom.innerHTML;
   }
 
   /**
