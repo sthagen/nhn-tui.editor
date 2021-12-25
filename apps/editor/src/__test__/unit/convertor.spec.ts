@@ -161,7 +161,7 @@ describe('Convertor', () => {
       const expected = source`
         ![](imgUrl)
         ![altText](imgUrl)
-        ![altText](img\\*Url)
+        ![altText](img*Url)
     	`;
 
       assertConverting(markdown, expected);
@@ -172,11 +172,13 @@ describe('Convertor', () => {
         [](url)foo
         [text](url)
         [text](ur*l)
+        [Editor](https://github.com/nhn_test/tui.editor)
     	`;
       const expected = source`
         foo
         [text](url)
-        [text](ur\\*l)
+        [text](ur*l)
+        [Editor](https://github.com/nhn_test/tui.editor)
     	`;
 
       assertConverting(markdown, expected);
@@ -279,6 +281,21 @@ describe('Convertor', () => {
         | --- | -------- |
         | [linkText](linkUrl) | foo [linkText](linkUrl) baz |
         | **foo** *bar* ~~baz~~ | **foo** *bar* ~~baz~~ [linkText](linkUrl) |
+      `;
+
+      assertConverting(markdown, `${expected}\n`);
+    });
+
+    it('should normalize wrong table syntax when converting', () => {
+      const markdown = source`
+        | col1 | col2 | col3 |
+        | --- | --- |
+        | cell1 | cell2 | cell3 |
+      `;
+      const expected = source`
+        | col1 | col2 | col3 |
+        | ---- | ---- | ---- |
+        | cell1 | cell2 |  |
       `;
 
       assertConverting(markdown, `${expected}\n`);
