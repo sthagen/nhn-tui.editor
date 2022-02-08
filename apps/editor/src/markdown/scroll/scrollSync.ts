@@ -50,6 +50,8 @@ export class ScrollSync {
 
   private mdEditor: MdEditor;
 
+  private timer: NodeJS.Timeout | null = null;
+
   constructor(mdEditor: MdEditor, preview: MarkdownPreview, eventEmitter: Emitter) {
     const { previewContent: previewRoot, el: previewEl } = preview;
 
@@ -64,10 +66,11 @@ export class ScrollSync {
 
   private addScrollSyncEvent() {
     this.eventEmitter.listen('afterPreviewRender', () => {
+      this.clearTimer();
       // Immediately after the 'afterPreviewRender' event has occurred,
       // browser rendering is not yet complete.
       // So the size of elements can not be accurately measured.
-      setTimeout(() => {
+      this.timer = setTimeout(() => {
         this.syncPreviewScrollTop(true);
       }, 200);
     });
@@ -96,7 +99,7 @@ export class ScrollSync {
     const pos = this.mdEditor.getSelection();
     const firstMdNode = this.toastMark.findFirstNodeAtLine(pos[0][0])!;
     const previewHeight = this.previewEl.clientHeight;
-    const { el } = getParentNodeObj(firstMdNode);
+    const { el } = getParentNodeObj(this.previewRoot, firstMdNode);
     const totalOffsetTop = getTotalOffsetTop(el, this.previewRoot) || el.offsetTop;
     const nodeHeight = el.clientHeight;
     // multiply 0.5 for calculating the position in the middle of preview area
@@ -135,7 +138,7 @@ export class ScrollSync {
         }
         targetScrollTop = scrollTopByEditing;
       } else {
-        const { el, mdNode } = getParentNodeObj(firstMdNode);
+        const { el, mdNode } = getParentNodeObj(this.previewRoot, firstMdNode);
         const { height, rect } = getEditorRangeHeightInfo(doc, mdNode, children);
         const totalOffsetTop = getTotalOffsetTop(el, previewRoot) || el.offsetTop;
         const nodeHeight = el.clientHeight;
@@ -175,7 +178,7 @@ export class ScrollSync {
 
       const { children } = dom;
       const mdNodeId = Number(targetNode.getAttribute('data-nodeid'));
-      const { mdNode, el } = getParentNodeObj(toastMark.findNodeById(mdNodeId)!);
+      const { mdNode, el } = getParentNodeObj(this.previewRoot, toastMark.findNodeById(mdNodeId)!);
       const mdNodeStartLine = getMdStartLine(mdNode);
 
       targetScrollTop = (children[mdNodeStartLine - 1] as HTMLElement).offsetTop;
@@ -235,7 +238,15 @@ export class ScrollSync {
     animate(curScrollTop, targetScrollTop, syncCallbacks);
   }
 
+  clearTimer() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  }
+
   destroy() {
+    this.clearTimer();
     this.eventEmitter.removeEventHandler('scroll');
     this.eventEmitter.removeEventHandler('afterPreviewRender');
   }

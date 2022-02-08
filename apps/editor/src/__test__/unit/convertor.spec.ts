@@ -157,11 +157,13 @@ describe('Convertor', () => {
         ![](imgUrl)
         ![altText](imgUrl)
         ![altText](img*Url)
-      `;
+        ![altText](url?key=abc&attribute=abc)
+        `;
       const expected = source`
         ![](imgUrl)
         ![altText](imgUrl)
         ![altText](img*Url)
+        ![altText](url?key=abc&attribute=abc)
     	`;
 
       assertConverting(markdown, expected);
@@ -173,12 +175,16 @@ describe('Convertor', () => {
         [text](url)
         [text](ur*l)
         [Editor](https://github.com/nhn_test/tui.editor)
-    	`;
+        [this.is_a_test_link.com](this.is_a_test_link.com)
+        [text](url?key=abc&attribute=abc)
+        `;
       const expected = source`
         foo
         [text](url)
         [text](ur*l)
         [Editor](https://github.com/nhn_test/tui.editor)
+        [this.is_a_test_link.com](this.is_a_test_link.com)
+        [text](url?key=abc&attribute=abc)
     	`;
 
       assertConverting(markdown, expected);
@@ -944,8 +950,27 @@ describe('Convertor', () => {
       assertConverting(markdown, expected);
     });
 
+    it('should convert html block node as the block node through inserting the blank line', () => {
+      const markdown = source`
+        para1
+
+        <iframe src="https://www.youtube.com/embed/XyenY12fzAk" width="420" height="315"></iframe>
+
+        para2
+      `;
+      const expected = source`
+        para1
+
+        <iframe height="315" width="420" src="https://www.youtube.com/embed/XyenY12fzAk"></iframe>
+
+        para2
+      `;
+
+      assertConverting(markdown, expected);
+    });
+
     it('should convert html inline node', () => {
-      const markdown = '<big class="my-big">content</big>';
+      const markdown = 'inline <big class="my-big">content</big>';
 
       assertConverting(markdown, markdown);
     });
